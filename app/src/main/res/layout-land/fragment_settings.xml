@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_setting_screen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="70dp" />
+
+    <TextView
+        android:id="@+id/textView_location_setting_header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="@string/location_setting_header"
+        android:textColor="@color/colorAccent"
+        android:textSize="16sp"
+        app:layout_constraintStart_toStartOf="@+id/guideline_setting_screen"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView_use_device_location_setting"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="@string/use_device_location_setting"
+        android:textColor="@color/colorDarkGrey"
+        android:textSize="16sp"
+        app:layout_constraintStart_toStartOf="@+id/guideline_setting_screen"
+        app:layout_constraintTop_toBottomOf="@+id/textView_location_setting_header" />
+
+    <TextView
+        android:id="@+id/textView_use_device_location_setting_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="@string/use_device_location_setting_description"
+        android:textColor="@color/colorMediumGrey"
+        android:textSize="14sp"
+        app:layout_constraintStart_toStartOf="@+id/guideline_setting_screen"
+        app:layout_constraintTop_toBottomOf="@+id/textView_use_device_location_setting" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switchCompat_use_device_location_setting"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="false"
+        android:layout_marginEnd="20dp"
+        app:layout_constraintBottom_toBottomOf="@+id/textView_use_device_location_setting_description"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/textView_use_device_location_setting" />
+
+    <LinearLayout
+        android:id="@+id/linearLayout_location_setting"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView_use_device_location_setting_description">
+
+        <TextView
+            android:id="@+id/textView_location_setting"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="70dp"
+            android:text="@string/location_setting"
+            android:textColor="@color/colorDarkGrey"
+            android:textSize="16sp"
+            tools:ignore="RtlSymmetry" />
+
+        <TextView
+            android:id="@+id/textView_location_setting_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="70dp"
+            android:layout_marginTop="4dp"
+            android:textColor="@color/colorMediumGrey"
+            android:textSize="14sp"
+            tools:ignore="RtlSymmetry"
+            tools:text="Novosibirsk" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/textView_unit_system_setting_header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="@string/unit_system_setting_header"
+        android:textColor="@color/colorAccent"
+        android:textSize="16sp"
+        app:layout_constraintStart_toStartOf="@+id/guideline_setting_screen"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout_location_setting" />
+
+    <LinearLayout
+        android:id="@+id/linearLayout_unit_system_setting"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView_unit_system_setting_header">
+
+        <TextView
+            android:id="@+id/textView_unit_system_setting"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="70dp"
+            android:text="@string/unit_system_setting"
+            android:textColor="@color/colorDarkGrey"
+            android:textSize="16sp"
+            tools:ignore="RtlSymmetry" />
+
+        <TextView
+            android:id="@+id/textView_unit_system_setting_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="70dp"
+            android:layout_marginTop="4dp"
+            android:textColor="@color/colorMediumGrey"
+            android:textSize="14sp"
+            tools:ignore="RtlSymmetry"
+            tools:text="Metric" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

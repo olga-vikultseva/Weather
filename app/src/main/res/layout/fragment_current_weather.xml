@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/swipeRefreshLayout_current_weather"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".ui.weather.current.CurrentWeatherFragment">
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_current_weather"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.5" />
+
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/group_current_weather_data"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="visible"
+            app:constraint_referenced_ids="textView_weather_description_current_weather,
+                imageView_weather_icon_current_weather,
+                main_temperature_section_current_weather,
+                section_weather_data_current_weather" />
+
+        <TextView
+            android:id="@+id/textView_weather_description_current_weather"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="46dp"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline4"
+            android:textSize="36sp"
+            app:layout_constraintBottom_toTopOf="@+id/main_temperature_section_current_weather"
+            app:layout_constraintStart_toStartOf="@+id/main_temperature_section_current_weather"
+            tools:text="Patchy rain possible" />
+
+        <ImageView
+            android:id="@+id/imageView_weather_icon_current_weather"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="@+id/main_temperature_section_current_weather"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/guideline_current_weather"
+            app:layout_constraintTop_toTopOf="@+id/main_temperature_section_current_weather"
+            app:layout_constraintWidth_percent="0.25"
+            tools:ignore="ContentDescription"
+            tools:src="@drawable/ic_weather_sunny" />
+
+        <include
+            android:id="@+id/main_temperature_section_current_weather"
+            layout="@layout/main_temperature_section"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/guideline_current_weather"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.3" />
+
+        <include
+            android:id="@+id/section_weather_data_current_weather"
+            layout="@layout/section_weather_data"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            app:layout_constraintStart_toStartOf="@+id/main_temperature_section_current_weather"
+            app:layout_constraintTop_toBottomOf="@+id/main_temperature_section_current_weather" />
+
+        <include
+            android:id="@+id/loading_current_weather"
+            layout="@layout/loading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.4" />
+
+        <include
+            android:id="@+id/error_current_weather"
+            layout="@layout/error"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.4" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:padding="8dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/textView_temp_morn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/morning"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toStartOf="@+id/textView_temp_day"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView_temp_morn_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="@+id/textView_temp_morn"
+        app:layout_constraintStart_toStartOf="@+id/textView_temp_morn"
+        app:layout_constraintTop_toBottomOf="@+id/textView_temp_morn"
+        tools:text="18°C" />
+
+    <TextView
+        android:id="@+id/textView_temp_day"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/day"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toStartOf="@+id/textView_temp_eve"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/textView_temp_morn"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView_temp_day_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="@+id/textView_temp_day"
+        app:layout_constraintStart_toStartOf="@+id/textView_temp_day"
+        app:layout_constraintTop_toBottomOf="@+id/textView_temp_day"
+        tools:text="25°C" />
+
+    <TextView
+        android:id="@+id/textView_temp_eve"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/evening"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toStartOf="@+id/textView_temp_night"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/textView_temp_day"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView_temp_eve_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="@+id/textView_temp_eve"
+        app:layout_constraintStart_toStartOf="@+id/textView_temp_eve"
+        app:layout_constraintTop_toBottomOf="@+id/textView_temp_eve"
+        tools:text="21°C" />
+
+    <TextView
+        android:id="@+id/textView_temp_night"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/night"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/textView_temp_eve"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView_temp_night_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="@+id/textView_temp_night"
+        app:layout_constraintStart_toStartOf="@+id/textView_temp_night"
+        app:layout_constraintTop_toBottomOf="@+id/textView_temp_night"
+        tools:text="16°C" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
