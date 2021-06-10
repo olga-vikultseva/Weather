@@ -6,6 +6,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface CurrentWeatherInteractor {
     val currentWeatherStateFlow: Flow<WeatherState<CurrentWeatherEntry>>
-    fun refreshCurrentWeather()
-    fun close()
+    suspend fun subscribeToCurrentWeatherUpdates()
+    suspend fun refreshCurrentWeather()
 }

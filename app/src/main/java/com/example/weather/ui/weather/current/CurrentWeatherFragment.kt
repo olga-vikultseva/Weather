@@ -35,8 +35,8 @@ class CurrentWeatherFragment : Fragment(R.layout.fragment_current_weather) {
 
         updateDateToToday()
 
-        viewModel.currentWeather.observe(viewLifecycleOwner) {
-            when (it) {
+        viewModel.currentWeather.observe(viewLifecycleOwner) { currentWeatherUIState ->
+            when (currentWeatherUIState) {
                 is WeatherUIState.Loading -> {
                     hideData()
                     hideError()
@@ -45,12 +45,12 @@ class CurrentWeatherFragment : Fragment(R.layout.fragment_current_weather) {
                 is WeatherUIState.Data -> {
                     hideLoading()
                     hideError()
-                    showData(it.data)
+                    showData(currentWeatherUIState.data)
                 }
                 is WeatherUIState.Error -> {
                     hideLoading()
                     hideData()
-                    showError(it.errorMessage)
+                    showError(currentWeatherUIState.errorMessage)
                 }
             }
         }

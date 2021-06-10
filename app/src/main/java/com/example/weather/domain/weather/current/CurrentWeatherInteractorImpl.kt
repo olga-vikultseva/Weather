@@ -8,69 +8,56 @@ import com.example.weather.data.providers.LocationProvider
 import com.example.weather.data.providers.UnitProvider
 import com.example.weather.data.repositories.WeatherRepository
 import com.example.weather.domain.weather.WeatherState
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import java.io.Closeable
 
 class CurrentWeatherInteractorImpl(
     private val locationProvider: LocationProvider,
     private val weatherRepository: WeatherRepository,
     private val unitProvider: UnitProvider
-) : CurrentWeatherInteractor, Closeable {
+) : CurrentWeatherInteractor {
 
-    private val _currentWeatherStateFlow = MutableStateFlow<WeatherState<CurrentWeatherEntry>>(WeatherState.Loading())
-    override val currentWeatherStateFlow = _currentWeatherStateFlow.asStateFlow()
+    private val _currentWeatherStateFlow =
+        MutableStateFlow<WeatherState<CurrentWeatherEntry>>(WeatherState.Loading())
+    override val currentWeatherStateFlow =
+        _currentWeatherStateFlow as StateFlow<WeatherState<CurrentWeatherEntry>>
 
-    private lateinit var currentWeatherUpdatesJob: Job
-    private lateinit var currentWeatherRefreshJob: Job
-
-    init {
-        subscribeToCurrentWeatherUpdates()
-    }
-
-    override fun refreshCurrentWeather() {
-        if (!this::currentWeatherRefreshJob.isInitialized || currentWeatherRefreshJob.isCompleted) {
-            currentWeatherRefreshJob = GlobalScope.launch {
-                _currentWeatherStateFlow.value = WeatherState.Loading()
-                locationProvider.locationFlow.first().let { locationResult ->
-                    when (locationResult) {
-                        is ResultWrapper.Loading -> return@launch
-                        is ResultWrapper.Success -> {
-                            _currentWeatherStateFlow.value = getCurrentWeather(
-                                isRefresh = true,
-                                location = locationResult.data,
-                                unitSystem = unitProvider.unitSystemFlow.first()
-                            )
-                        }
-                        is ResultWrapper.Error -> locationProvider.requestLocationUpdate()
-                    }
-                }
-            }
+    override suspend fun subscribeToCurrentWeatherUpdates() {
+        locationProvider.locationFlow.combine(unitProvider.unitSystemFlow) { locationResult, unitSystem ->
+            _currentWeatherStateFlow.value = WeatherState.Loading()
+            locationResult to unitSystem
         }
+            .map { (locationResult, unitSystem) ->
+                when (locationResult) {
+                    is ResultWrapper.Loading -> WeatherState.Loading()
+                    is ResultWrapper.Success -> getCurrentWeather(
+                        isRefresh = false,
+                        location = locationResult.data,
+                        unitSystem = unitSystem
+                    )
+                    is ResultWrapper.Error -> WeatherState.Error(locationResult.error)
+                }
+            }
+            .collect { currentWeatherState ->
+                _currentWeatherStateFlow.value = currentWeatherState
+            }
     }
 
-    private fun subscribeToCurrentWeatherUpdates() {
-        currentWeatherUpdatesJob = GlobalScope.launch {
-            locationProvider.locationFlow.combine(unitProvider.unitSystemFlow) { locationResult, unitSystem ->
-                _currentWeatherStateFlow.value = WeatherState.Loading()
-                locationResult to unitSystem
+    override suspend fun refreshCurrentWeather() {
+        _currentWeatherStateFlow.value = WeatherState.Loading()
+        locationProvider.locationFlow.first().let { locationResult ->
+            when (locationResult) {
+                is ResultWrapper.Loading -> {
+                    _currentWeatherStateFlow.value = WeatherState.Loading()
+                }
+                is ResultWrapper.Success -> {
+                    _currentWeatherStateFlow.value = getCurrentWeather(
+                        isRefresh = true,
+                        location = locationResult.data,
+                        unitSystem = unitProvider.unitSystemFlow.first()
+                    )
+                }
+                is ResultWrapper.Error -> locationProvider.requestLocationUpdate()
             }
-                .map { (locationResult, unitSystem) ->
-                    when (locationResult) {
-                        is ResultWrapper.Loading -> WeatherState.Loading()
-                        is ResultWrapper.Success -> getCurrentWeather(
-                            isRefresh = false,
-                            location = locationResult.data,
-                            unitSystem = unitSystem
-                        )
-                        is ResultWrapper.Error -> WeatherState.Error(locationResult.error)
-                    }
-                }
-                .collect {
-                    _currentWeatherStateFlow.value = it
-                }
         }
     }
 
@@ -93,11 +80,4 @@ class CurrentWeatherInteractorImpl(
                 is ResultWrapper.Error -> WeatherState.Error(weatherResult.error)
             }
         }
-
-    override fun close() {
-        currentWeatherUpdatesJob.cancel()
-        if (this::currentWeatherRefreshJob.isInitialized && currentWeatherRefreshJob.isActive) {
-            currentWeatherRefreshJob.cancel()
-        }
-    }
 }

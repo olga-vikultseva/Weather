@@ -1,8 +1,7 @@
 package com.example.weather.ui.weather.current
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.example.weather.R
 import com.example.weather.data.WeatherLocation
@@ -29,38 +28,36 @@ class CurrentWeatherViewModel @Inject constructor(
     private val errorFormatter: ErrorFormatter
 ) : ViewModel() {
 
-    private val _currentWeather = MutableLiveData<WeatherUIState<CurrentWeather>>()
-    val currentWeather: LiveData<WeatherUIState<CurrentWeather>>
-        get() = _currentWeather
+    val currentWeather = liveData {
+        currentWeatherInteractor.currentWeatherStateFlow
+            .map { currentWeatherState ->
+                when (currentWeatherState) {
+                    is WeatherState.Loading -> WeatherUIState.Loading()
+                    is WeatherState.Data -> WeatherUIState.Data(
+                        convertToCurrentWeather(
+                            currentWeatherEntry = currentWeatherState.data,
+                            weatherLocation = currentWeatherState.weatherLocation
+                        )
+                    )
+                    is WeatherState.Error -> WeatherUIState.Error(
+                        errorFormatter.getErrorMessage(currentWeatherState.error)
+                    )
+                }
+            }
+            .collect { currentWeatherUIState ->
+                emit(currentWeatherUIState)
+            }
+    }
 
     init {
-        subscribeToCurrentWeatherUpdates()
+        viewModelScope.launch {
+            currentWeatherInteractor.subscribeToCurrentWeatherUpdates()
+        }
     }
 
     fun refreshCurrentWeather() {
-        currentWeatherInteractor.refreshCurrentWeather()
-    }
-
-    private fun subscribeToCurrentWeatherUpdates() {
         viewModelScope.launch {
-            currentWeatherInteractor.currentWeatherStateFlow
-                .map { currentWeatherState ->
-                    when (currentWeatherState) {
-                        is WeatherState.Loading -> WeatherUIState.Loading()
-                        is WeatherState.Data -> WeatherUIState.Data(
-                            convertToCurrentWeather(
-                                currentWeatherEntry = currentWeatherState.data,
-                                weatherLocation = currentWeatherState.weatherLocation
-                            )
-                        )
-                        is WeatherState.Error -> WeatherUIState.Error(
-                            errorFormatter.getErrorMessage(currentWeatherState.error)
-                        )
-                    }
-                }
-                .collect {
-                    _currentWeather.value = it
-                }
+            currentWeatherInteractor.refreshCurrentWeather()
         }
     }
 
@@ -94,9 +91,4 @@ class CurrentWeatherViewModel @Inject constructor(
         ),
         weatherIconUrl = currentWeatherEntry.weatherIconUrl
     )
-
-    override fun onCleared() {
-        super.onCleared()
-        currentWeatherInteractor.close()
-    }
 }
