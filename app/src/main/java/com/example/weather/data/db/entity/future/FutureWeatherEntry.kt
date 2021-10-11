@@ -41,10 +41,12 @@ data class Day(
     val windDirection: String,
     @ColumnInfo(name = "wind_speed")
     val windSpeed: Int,
+    @ColumnInfo(name = "pressure")
     val pressure: Int,
+    @ColumnInfo(name = "humidity")
     val humidity: Int,
     @ColumnInfo(name = "uv_index")
-    val uVIndex: Double,
+    val uvIndex: Double,
     @ColumnInfo(name = "weather_description")
     val weatherDescription: String,
     @ColumnInfo(name = "weather_icon_url")
