@@ -1,14 +1,15 @@
-package com.example.weather.data.network
+package com.example.weather.data.datasources
 
 import com.example.weather.data.ErrorType
 import com.example.weather.data.ResultWrapper
+import com.example.weather.data.network.WeatherApiService
 import com.example.weather.data.network.response.CurrentWeatherResponse
 import com.example.weather.data.network.response.FutureWeatherResponse
 import com.example.weather.internal.NoConnectivityException
 
-class WeatherNetworkDataSourceImpl(
+class WeatherDataSourceImpl(
     private val weatherApiService: WeatherApiService
-) : WeatherNetworkDataSource {
+) : WeatherDataSource {
 
     override suspend fun fetchCurrentWeather(
         latitude: Double,

@@ -1,13 +1,14 @@
-package com.example.weather.data.network
+package com.example.weather.data.datasources
 
 import com.example.weather.data.ErrorType
 import com.example.weather.data.ResultWrapper
+import com.example.weather.data.network.GeocodingApiService
 import com.example.weather.data.network.response.CityResponse
 import com.example.weather.internal.NoConnectivityException
 
-class CityNetworkDataSourceImpl(
+class CityDataSourceImpl(
     private val geocodingApiService: GeocodingApiService
-) : CityNetworkDataSource {
+) : CityDataSource {
 
     override suspend fun searchCity(query: String): ResultWrapper<CityResponse> =
         try {
@@ -17,7 +18,6 @@ class CityNetworkDataSourceImpl(
         } catch (exception: Exception) {
             ResultWrapper.Error(convertToErrorType(exception))
         }
-
 
     override suspend fun searchCity(
         latitude: Double,

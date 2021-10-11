@@ -1,10 +1,10 @@
-package com.example.weather.data.network
+package com.example.weather.data.datasources
 
 import com.example.weather.data.ResultWrapper
 import com.example.weather.data.network.response.CurrentWeatherResponse
 import com.example.weather.data.network.response.FutureWeatherResponse
 
-interface WeatherNetworkDataSource {
+interface WeatherDataSource {
 
     suspend fun fetchCurrentWeather(
         latitude: Double,
