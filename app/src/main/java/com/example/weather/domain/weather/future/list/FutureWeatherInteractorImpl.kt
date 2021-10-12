@@ -5,7 +5,7 @@ import com.example.weather.data.UnitSystem
 import com.example.weather.data.WeatherLocation
 import com.example.weather.data.db.entity.future.FutureWeatherEntry
 import com.example.weather.data.providers.LocationProvider
-import com.example.weather.data.providers.UnitProvider
+import com.example.weather.data.providers.UnitSystemProvider
 import com.example.weather.data.repositories.WeatherRepository
 import com.example.weather.domain.weather.WeatherState
 import kotlinx.coroutines.GlobalScope
@@ -17,7 +17,7 @@ import java.io.Closeable
 class FutureWeatherInteractorImpl(
     private val locationProvider: LocationProvider,
     private val weatherRepository: WeatherRepository,
-    private val unitProvider: UnitProvider
+    private val unitSystemProvider: UnitSystemProvider
 ) : FutureWeatherInteractor, Closeable {
 
     private val _futureWeatherStateFlow = MutableStateFlow<WeatherState<List<FutureWeatherEntry>>>(WeatherState.Loading())
@@ -41,7 +41,7 @@ class FutureWeatherInteractorImpl(
                             _futureWeatherStateFlow.value = getFutureWeather(
                                 isRefresh = true,
                                 location = locationResult.data,
-                                unitSystem = unitProvider.unitSystemFlow.first()
+                                unitSystem = unitSystemProvider.unitSystemFlow.first()
                             )
                         }
                         is ResultWrapper.Error -> locationProvider.requestLocationUpdate()
@@ -53,7 +53,7 @@ class FutureWeatherInteractorImpl(
 
     private fun subscribeToFutureWeatherUpdates() {
         futureWeatherUpdatesJob = GlobalScope.launch {
-            locationProvider.locationFlow.combine(unitProvider.unitSystemFlow) { locationResult, unitSystem ->
+            locationProvider.locationFlow.combine(unitSystemProvider.unitSystemFlow) { locationResult, unitSystem ->
                 _futureWeatherStateFlow.value = WeatherState.Loading()
                 locationResult to unitSystem
             }

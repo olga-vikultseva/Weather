@@ -2,7 +2,7 @@ package com.example.weather.domain.citysearch
 
 import com.example.weather.data.ResultWrapper
 import com.example.weather.data.WeatherLocation
-import com.example.weather.data.network.CityNetworkDataSource
+import com.example.weather.data.datasources.CityDataSource
 import com.example.weather.data.network.response.CityResponse
 import com.example.weather.data.providers.LocationProvider
 import com.example.weather.domain.citysearch.model.CitySearchState
@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 import java.io.Closeable
 
 class CitySearchInteractorImpl(
-    private val cityNetworkDataSource: CityNetworkDataSource,
+    private val cityDataSource: CityDataSource,
     private val locationProvider: LocationProvider
 ) : CitySearchInteractor, Closeable {
 
@@ -26,8 +26,8 @@ class CitySearchInteractorImpl(
     override fun searchCity(query: String) = if (query.length >= MINIMUM_QUERY_LENGTH) {
         searchCityJob = GlobalScope.launch {
             _citySearchStateFlow.value = CitySearchState.Loading
-            _citySearchStateFlow.value = cityNetworkDataSource.searchCity(query).let { cityQueryResult ->
-                when(cityQueryResult) {
+            _citySearchStateFlow.value = cityDataSource.searchCity(query).let { cityQueryResult ->
+                when (cityQueryResult) {
                     is ResultWrapper.Loading -> CitySearchState.Loading
                     is ResultWrapper.Success -> CitySearchState.SearchResult(
                         convertToWeatherLocationList(cityQueryResult.data)
@@ -41,7 +41,7 @@ class CitySearchInteractorImpl(
     }
 
     override fun updateLocationPreference(location: WeatherLocation) =
-        locationProvider.updateLocationPreference(location)
+        locationProvider.updateLocation(location)
 
     private fun convertToWeatherLocationList(cityResponse: CityResponse): List<WeatherLocation> {
 
@@ -63,7 +63,7 @@ class CitySearchInteractorImpl(
         }
     }
 
-    private companion object {
-        const val MINIMUM_QUERY_LENGTH = 2
+    companion object {
+        private const val MINIMUM_QUERY_LENGTH = 2
     }
 }

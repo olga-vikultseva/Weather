@@ -65,7 +65,7 @@ class DetailedWeatherViewModel @AssistedInject constructor(
             ),
             uvIndex = stringProvider.getString(
                 R.string.uv_index_placeholder,
-                futureWeatherEntry.day.uVIndex.toInt()
+                futureWeatherEntry.day.uvIndex.toInt()
             ),
             weatherIconUrl = futureWeatherEntry.day.weatherIconUrl
         )

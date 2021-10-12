@@ -5,7 +5,7 @@ import com.example.weather.data.UnitSystem
 import com.example.weather.data.WeatherLocation
 import com.example.weather.data.db.entity.current.CurrentWeatherEntry
 import com.example.weather.data.providers.LocationProvider
-import com.example.weather.data.providers.UnitProvider
+import com.example.weather.data.providers.UnitSystemProvider
 import com.example.weather.data.repositories.WeatherRepository
 import com.example.weather.domain.weather.WeatherState
 import kotlinx.coroutines.flow.*
@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.*
 class CurrentWeatherInteractorImpl(
     private val locationProvider: LocationProvider,
     private val weatherRepository: WeatherRepository,
-    private val unitProvider: UnitProvider
+    private val unitSystemProvider: UnitSystemProvider
 ) : CurrentWeatherInteractor {
 
     private val _currentWeatherStateFlow =
@@ -22,7 +22,7 @@ class CurrentWeatherInteractorImpl(
         _currentWeatherStateFlow as StateFlow<WeatherState<CurrentWeatherEntry>>
 
     override suspend fun subscribeToCurrentWeatherUpdates() {
-        locationProvider.locationFlow.combine(unitProvider.unitSystemFlow) { locationResult, unitSystem ->
+        locationProvider.locationFlow.combine(unitSystemProvider.unitSystemFlow) { locationResult, unitSystem ->
             _currentWeatherStateFlow.value = WeatherState.Loading()
             locationResult to unitSystem
         }
@@ -53,7 +53,7 @@ class CurrentWeatherInteractorImpl(
                     _currentWeatherStateFlow.value = getCurrentWeather(
                         isRefresh = true,
                         location = locationResult.data,
-                        unitSystem = unitProvider.unitSystemFlow.first()
+                        unitSystem = unitSystemProvider.unitSystemFlow.first()
                     )
                 }
                 is ResultWrapper.Error -> locationProvider.requestLocationUpdate()

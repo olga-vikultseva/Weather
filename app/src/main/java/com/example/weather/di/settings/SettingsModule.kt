@@ -1,7 +1,7 @@
 package com.example.weather.di.settings
 
 import com.example.weather.data.providers.LocationProvider
-import com.example.weather.data.providers.UnitProvider
+import com.example.weather.data.providers.UnitSystemProvider
 import com.example.weather.domain.settings.SettingsInteractor
 import com.example.weather.domain.settings.SettingsInteractorImpl
 import dagger.Module
@@ -18,6 +18,6 @@ object SettingsModule {
     @ViewModelScoped
     fun provideSettingsInteractor(
         locationProvider: LocationProvider,
-        unitProvider: UnitProvider
-    ): SettingsInteractor = SettingsInteractorImpl(locationProvider, unitProvider)
+        unitSystemProvider: UnitSystemProvider
+    ): SettingsInteractor = SettingsInteractorImpl(locationProvider, unitSystemProvider)
 }

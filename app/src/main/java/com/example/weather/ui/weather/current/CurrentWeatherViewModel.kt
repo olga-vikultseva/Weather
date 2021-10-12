@@ -85,9 +85,9 @@ class CurrentWeatherViewModel @Inject constructor(
             R.string.humidity_placeholder,
             currentWeatherEntry.humidity
         ),
-        uVIndex = stringProvider.getString(
+        uvIndex = stringProvider.getString(
             R.string.uv_index_placeholder,
-            currentWeatherEntry.uVIndex
+            currentWeatherEntry.uvIndex
         ),
         weatherIconUrl = currentWeatherEntry.weatherIconUrl
     )

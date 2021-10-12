@@ -8,6 +8,6 @@ data class CurrentWeather(
     val wind: String,
     val pressure: String,
     val humidity: String,
-    val uVIndex: String,
+    val uvIndex: String,
     val weatherIconUrl: String
 )

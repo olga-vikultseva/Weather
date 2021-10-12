@@ -1,7 +1,7 @@
 package com.example.weather.di.weather.future.list
 
 import com.example.weather.data.providers.LocationProvider
-import com.example.weather.data.providers.UnitProvider
+import com.example.weather.data.providers.UnitSystemProvider
 import com.example.weather.data.repositories.WeatherRepository
 import com.example.weather.domain.weather.future.list.FutureWeatherInteractor
 import com.example.weather.domain.weather.future.list.FutureWeatherInteractorImpl
@@ -20,7 +20,7 @@ object FutureWeatherModule {
     fun provideFutureWeatherInteractor(
         locationProvider: LocationProvider,
         weatherRepository: WeatherRepository,
-        unitProvider: UnitProvider
+        unitSystemProvider: UnitSystemProvider
     ): FutureWeatherInteractor =
-        FutureWeatherInteractorImpl(locationProvider, weatherRepository, unitProvider)
+        FutureWeatherInteractorImpl(locationProvider, weatherRepository, unitSystemProvider)
 }

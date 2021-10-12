@@ -5,7 +5,7 @@ import android.content.pm.PackageManager
 import com.example.weather.data.ResultWrapper
 import com.example.weather.data.UnitSystem
 import com.example.weather.data.providers.LocationProvider
-import com.example.weather.data.providers.UnitProvider
+import com.example.weather.data.providers.UnitSystemProvider
 import com.example.weather.domain.settings.model.LocationSettingState
 import com.example.weather.domain.settings.model.UnitSystemSettingState
 import com.example.weather.domain.settings.model.UseDeviceLocationSettingState
@@ -18,7 +18,7 @@ import java.io.Closeable
 
 class SettingsInteractorImpl(
     private val locationProvider: LocationProvider,
-    private val unitProvider: UnitProvider
+    private val unitSystemProvider: UnitSystemProvider
 ) : SettingsInteractor, Closeable {
 
     private val _useDeviceLocationSettingFlow = MutableUpdateStateFlow<UseDeviceLocationSettingState>(UseDeviceLocationSettingState.Loading)
@@ -54,18 +54,18 @@ class SettingsInteractorImpl(
     }
 
     override fun onUseDeviceLocationCheckedChange() {
-        val isChecked = !locationProvider.isUsingDeviceLocation()
+        val isChecked = !locationProvider.isUseDeviceLocation
         if (isChecked) {
             _permissionRequestTrigger.value = Manifest.permission.ACCESS_FINE_LOCATION to LOCATION_PERMISSION_REQUEST
         } else {
-            locationProvider.updateUseDeviceLocationPreference(false)
+            locationProvider.updateUseDeviceLocation(false)
         }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, grantResults: IntArray) {
         if (requestCode == LOCATION_PERMISSION_REQUEST) {
             if (grantResults.first() == PackageManager.PERMISSION_GRANTED) {
-                locationProvider.updateUseDeviceLocationPreference(true)
+                locationProvider.updateUseDeviceLocation(true)
             } else {
                 _useDeviceLocationSettingFlow.value = UseDeviceLocationSettingState.Disabled
             }
@@ -73,7 +73,7 @@ class SettingsInteractorImpl(
     }
 
     override fun onSelectionUnitSystemResult(unitSystem: UnitSystem) {
-        unitProvider.updateUnitSystemPreference(unitSystem)
+        unitSystemProvider.updateUnitSystem(unitSystem)
     }
 
     private fun subscribeToUseDeviceLocationSettingUpdates() {
@@ -112,7 +112,7 @@ class SettingsInteractorImpl(
 
     private fun subscribeToUnitSystemSettingUpdates() {
         unitSystemSettingUpdatesJob = GlobalScope.launch {
-            unitProvider.unitSystemFlow
+            unitSystemProvider.unitSystemFlow
                 .map { unitSystem ->
                     when (unitSystem) {
                         UnitSystem.METRIC -> UnitSystemSettingState.Metric
@@ -134,7 +134,7 @@ class SettingsInteractorImpl(
         }
     }
 
-    private companion object {
-        const val LOCATION_PERMISSION_REQUEST = 100
+    companion object {
+        private const val LOCATION_PERMISSION_REQUEST = 100
     }
 }

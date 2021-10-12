@@ -1,7 +1,7 @@
 package com.example.weather.di.weather.current
 
 import com.example.weather.data.providers.LocationProvider
-import com.example.weather.data.providers.UnitProvider
+import com.example.weather.data.providers.UnitSystemProvider
 import com.example.weather.data.repositories.WeatherRepository
 import com.example.weather.domain.weather.current.CurrentWeatherInteractor
 import com.example.weather.domain.weather.current.CurrentWeatherInteractorImpl
@@ -20,7 +20,7 @@ object CurrentWeatherModule {
     fun provideCurrentWeatherInteractor(
         locationProvider: LocationProvider,
         weatherRepository: WeatherRepository,
-        unitProvider: UnitProvider
+        unitSystemProvider: UnitSystemProvider
     ): CurrentWeatherInteractor =
-        CurrentWeatherInteractorImpl(locationProvider, weatherRepository, unitProvider)
+        CurrentWeatherInteractorImpl(locationProvider, weatherRepository, unitSystemProvider)
 }

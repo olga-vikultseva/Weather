@@ -1,6 +1,6 @@
 package com.example.weather.di.citysearch
 
-import com.example.weather.data.network.CityNetworkDataSource
+import com.example.weather.data.datasources.CityDataSource
 import com.example.weather.data.providers.LocationProvider
 import com.example.weather.domain.citysearch.CitySearchInteractor
 import com.example.weather.domain.citysearch.CitySearchInteractorImpl
@@ -17,7 +17,7 @@ object CitySearchModule {
     @Provides
     @ViewModelScoped
     fun provideCitySearchInteractor(
-        cityNetworkDataSource: CityNetworkDataSource,
+        cityDataSource: CityDataSource,
         locationProvider: LocationProvider
-    ): CitySearchInteractor = CitySearchInteractorImpl(cityNetworkDataSource, locationProvider)
+    ): CitySearchInteractor = CitySearchInteractorImpl(cityDataSource, locationProvider)
 }

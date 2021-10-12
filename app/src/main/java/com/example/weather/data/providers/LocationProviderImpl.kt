@@ -13,7 +13,7 @@ import androidx.core.location.component1
 import androidx.core.location.component2
 import com.example.weather.data.ResultWrapper
 import com.example.weather.data.WeatherLocation
-import com.example.weather.data.network.CityNetworkDataSource
+import com.example.weather.data.datasources.CityDataSource
 import com.example.weather.data.network.response.CityResponse
 import com.example.weather.internal.asDeferred
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -29,21 +29,26 @@ import kotlinx.serialization.json.Json
 
 class LocationProviderImpl(
     private val context: Context,
-    private val cityNetworkDataSource: CityNetworkDataSource,
+    private val cityDataSource: CityDataSource,
     private val fusedLocationProviderClient: FusedLocationProviderClient
 ) : PreferenceProvider(context), LocationProvider {
 
-    private val _useDeviceLocationFlow = MutableStateFlow(isUsingDeviceLocation())
+    override val isUseDeviceLocation: Boolean
+        get() = preferences.getBoolean(USE_DEVICE_LOCATION_PREFERENCE, false)
+
+    private val _useDeviceLocationFlow = MutableStateFlow(isUseDeviceLocation)
     override val useDeviceLocationFlow = _useDeviceLocationFlow.asStateFlow()
 
     private val _locationFlow = MutableStateFlow<ResultWrapper<WeatherLocation>>(ResultWrapper.Loading())
     override val locationFlow = _locationFlow.asStateFlow()
 
+    private lateinit var locationCallback: LocationCallback
+
     private val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         when (key) {
             USE_DEVICE_LOCATION_PREFERENCE -> {
                 _locationFlow.value = ResultWrapper.Loading()
-                if (isUsingDeviceLocation()) {
+                if (isUseDeviceLocation) {
                     _useDeviceLocationFlow.value = true
                     startLocationUpdates()
                 } else {
@@ -60,10 +65,8 @@ class LocationProviderImpl(
         }
     }
 
-    private lateinit var locationCallback: LocationCallback
-
     init {
-        if (isUsingDeviceLocation()) {
+        if (isUseDeviceLocation) {
             _useDeviceLocationFlow.value = true
             startLocationUpdates()
         } else {
@@ -75,36 +78,17 @@ class LocationProviderImpl(
         preferences.registerOnSharedPreferenceChangeListener(listener)
     }
 
-    override fun isUsingDeviceLocation(): Boolean =
-        preferences.getBoolean(USE_DEVICE_LOCATION_PREFERENCE, false)
-
-    override fun updateUseDeviceLocationPreference(value: Boolean) = preferences.edit {
-        putBoolean(USE_DEVICE_LOCATION_PREFERENCE, value)
+    override fun updateUseDeviceLocation(value: Boolean) {
+        preferences.edit {
+            putBoolean(USE_DEVICE_LOCATION_PREFERENCE, value)
+        }
     }
 
-    override fun updateLocationPreference(location: WeatherLocation) = preferences.edit {
-        putString(PREFERRED_LOCATION, Json.encodeToString(location))
+    override fun updateLocation(location: WeatherLocation) {
+        preferences.edit {
+            putString(PREFERRED_LOCATION, Json.encodeToString(location))
+        }
     }
-
-    override fun persistLocationForLastRequestCurrentWeather(location: WeatherLocation) =
-        preferences.edit {
-            putString(LOCATION_FOR_LAST_REQUEST_CURRENT_WEATHER, Json.encodeToString(location))
-        }
-
-    override fun persistLocationForLastRequestFutureWeather(location: WeatherLocation) =
-        preferences.edit {
-            putString(LOCATION_FOR_LAST_REQUEST_FUTURE_WEATHER, Json.encodeToString(location))
-        }
-
-    override fun getLocationForLastRequestCurrentWeather(): WeatherLocation? =
-        preferences.getString(LOCATION_FOR_LAST_REQUEST_CURRENT_WEATHER, null)?.let {
-            Json.decodeFromString(it)
-        }
-
-    override fun getLocationForLastRequestFutureWeather(): WeatherLocation? =
-        preferences.getString(LOCATION_FOR_LAST_REQUEST_FUTURE_WEATHER, null)?.let {
-            Json.decodeFromString(it)
-        }
 
     override suspend fun requestLocationUpdate() {
         _locationFlow.value = ResultWrapper.Loading()
@@ -112,12 +96,12 @@ class LocationProviderImpl(
     }
 
     private fun getPreferredLocation(): WeatherLocation =
-        preferences.getString(PREFERRED_LOCATION, null).let {
-            if (it == null) defaultLocation else Json.decodeFromString(it)
-        }
+        preferences.getString(PREFERRED_LOCATION, null)?.let {
+            Json.decodeFromString(it)
+        } ?: defaultLocation
 
     private suspend fun getLocation(): ResultWrapper<WeatherLocation> =
-        if (isUsingDeviceLocation()) {
+        if (isUseDeviceLocation) {
             if (hasLocationPermissionGranted()) {
                 getDeviceLocationCoordinatesAsync().await()?.let { currentDeviceLocation ->
                     if (isDeviceLocationChanged(
@@ -125,14 +109,14 @@ class LocationProviderImpl(
                             currentLongitude = currentDeviceLocation.longitude
                         )
                     ) {
-                        cityNetworkDataSource.searchCity(
+                        cityDataSource.searchCity(
                             latitude = currentDeviceLocation.latitude,
                             longitude = currentDeviceLocation.longitude
                         ).let { cityQueryResult ->
                             when (cityQueryResult) {
                                 is ResultWrapper.Success -> {
                                     val cityName = fetchCityName(cityQueryResult.data)
-                                    updateLocationPreference(
+                                    updateLocation(
                                         WeatherLocation(
                                             cityName = cityName,
                                             latitude = currentDeviceLocation.latitude,
@@ -150,7 +134,7 @@ class LocationProviderImpl(
                     }
                 } ?: ResultWrapper.Loading()
             } else {
-                updateUseDeviceLocationPreference(false)
+                updateUseDeviceLocation(false)
                 ResultWrapper.Success(getPreferredLocation())
             }
         } else {
@@ -186,14 +170,14 @@ class LocationProviderImpl(
                 if (locationResult != null && locationResult.locations.isNotEmpty()) {
                     val (latitude, longitude) = locationResult.locations.first()
                     GlobalScope.launch {
-                        cityNetworkDataSource.searchCity(latitude, longitude).let { cityResult ->
+                        cityDataSource.searchCity(latitude, longitude).let { cityResult ->
                             when (cityResult) {
                                 is ResultWrapper.Success -> {
                                     WeatherLocation(
                                         latitude = latitude,
                                         longitude = longitude,
                                         cityName = fetchCityName(cityResult.data)
-                                    ).let(::updateLocationPreference)
+                                    ).let(::updateLocation)
                                 }
                                 else -> return@launch
                             }
@@ -232,13 +216,11 @@ class LocationProviderImpl(
         return distance > SMALLEST_DISPLACEMENT_METERS
     }
 
-    private companion object {
-        val defaultLocation = WeatherLocation(55.751244, 37.618423, "Moscow")
-        const val USE_DEVICE_LOCATION_PREFERENCE = "USE_DEVICE_LOCATION_PREFERENCE"
-        const val PREFERRED_LOCATION = "PREFERRED_LOCATION"
-        const val LOCATION_FOR_LAST_REQUEST_CURRENT_WEATHER = "LOCATION_FOR_LAST_REQUEST_CURRENT_WEATHER"
-        const val LOCATION_FOR_LAST_REQUEST_FUTURE_WEATHER = "LOCATION_FOR_LAST_REQUEST_FUTURE_WEATHER"
-        const val LOCATION_UPDATE_INTERVAL_MILLIS: Long = 15 * 60 * 1000
-        const val SMALLEST_DISPLACEMENT_METERS: Float = 10 * 1000f
+    companion object {
+        private val defaultLocation = WeatherLocation(55.751244, 37.618423, "Moscow")
+        private const val USE_DEVICE_LOCATION_PREFERENCE = "USE_DEVICE_LOCATION_PREFERENCE"
+        private const val PREFERRED_LOCATION = "PREFERRED_LOCATION"
+        private const val LOCATION_UPDATE_INTERVAL_MILLIS: Long = 15 * 60 * 1000
+        private const val SMALLEST_DISPLACEMENT_METERS: Float = 10 * 1000f
     }
 }

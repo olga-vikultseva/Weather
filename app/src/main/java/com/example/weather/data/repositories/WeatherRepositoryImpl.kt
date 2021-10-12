@@ -3,17 +3,14 @@ package com.example.weather.data.repositories
 import com.example.weather.data.ResultWrapper
 import com.example.weather.data.UnitSystem
 import com.example.weather.data.WeatherLocation
+import com.example.weather.data.datasources.WeatherDataSource
 import com.example.weather.data.db.CurrentWeatherDao
 import com.example.weather.data.db.FutureWeatherDao
 import com.example.weather.data.db.entity.current.CurrentWeatherEntry
 import com.example.weather.data.db.entity.future.Day
 import com.example.weather.data.db.entity.future.FutureWeatherEntry
-import com.example.weather.data.network.WeatherNetworkDataSource
 import com.example.weather.data.network.response.CurrentWeatherResponse
 import com.example.weather.data.network.response.FutureWeatherResponse
-import com.example.weather.data.providers.LocationProvider
-import com.example.weather.data.providers.RequestTimeProvider
-import com.example.weather.data.providers.UnitProvider
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
@@ -21,55 +18,55 @@ import kotlin.math.roundToInt
 class WeatherRepositoryImpl(
     private val currentWeatherDao: CurrentWeatherDao,
     private val futureWeatherDao: FutureWeatherDao,
-    private val weatherNetworkDataSource: WeatherNetworkDataSource,
-    private val locationProvider: LocationProvider,
-    private val unitProvider: UnitProvider,
-    private val requestTimeProvider: RequestTimeProvider
+    private val weatherDataSource: WeatherDataSource,
+    private val lastWeatherRequestParams: LastWeatherRequestParamsProvider
 ) : WeatherRepository {
 
     override suspend fun getCurrentWeather(
         isRefresh: Boolean,
         weatherLocation: WeatherLocation,
         unitSystem: UnitSystem
-    ): ResultWrapper<CurrentWeatherEntry> =
-        if (isRefresh || isFetchNewDataNeeded(
-                currentLocation = weatherLocation,
-                lastLocation = locationProvider.getLocationForLastRequestCurrentWeather(),
-                currentUnitSystem = unitSystem,
-                lastUnitSystem = unitProvider.getUnitSystemForLastRequestCurrentWeather(),
-                currentTimeMillis = System.currentTimeMillis(),
-                lastRequestTimeMillis = requestTimeProvider.getTimestampMillisForLastRequestCurrentWeather()
-            )
-        ) {
+    ): ResultWrapper<CurrentWeatherEntry> {
+        val isFetchNewDataNeeded = isFetchNewDataNeeded(
+            currentLocation = weatherLocation,
+            lastLocation = lastWeatherRequestParams.currentWeatherLocation,
+            currentUnitSystem = unitSystem,
+            lastUnitSystem = lastWeatherRequestParams.currentWeatherUnitSystem,
+            currentTimeMillis = System.currentTimeMillis(),
+            lastRequestTimeMillis = lastWeatherRequestParams.currentWeatherRequestTimeMillis
+        )
+        return if (isRefresh || isFetchNewDataNeeded) {
             fetchCurrentWeather(weatherLocation, unitSystem)
         } else {
             ResultWrapper.Success(currentWeatherDao.getWeather())
         }
+    }
 
     override suspend fun getFutureWeather(
         isRefresh: Boolean,
         weatherLocation: WeatherLocation,
         unitSystem: UnitSystem
-    ): ResultWrapper<List<FutureWeatherEntry>> =
-        if (isRefresh || isFetchNewDataNeeded(
-                currentLocation = weatherLocation,
-                lastLocation = locationProvider.getLocationForLastRequestFutureWeather(),
-                currentUnitSystem = unitSystem,
-                lastUnitSystem = unitProvider.getUnitSystemForLastRequestFutureWeather(),
-                currentTimeMillis = System.currentTimeMillis(),
-                lastRequestTimeMillis = requestTimeProvider.getTimestampMillisForLastRequestFutureWeather()
-            )
-        ) {
+    ): ResultWrapper<List<FutureWeatherEntry>> {
+        val isFetchNewDataNeeded = isFetchNewDataNeeded(
+            currentLocation = weatherLocation,
+            lastLocation = lastWeatherRequestParams.futureWeatherLocation,
+            currentUnitSystem = unitSystem,
+            lastUnitSystem = lastWeatherRequestParams.futureWeatherUnitSystem,
+            currentTimeMillis = System.currentTimeMillis(),
+            lastRequestTimeMillis = lastWeatherRequestParams.futureWeatherRequestTimeMillis
+        )
+        return if (isRefresh || isFetchNewDataNeeded) {
             fetchFutureWeather(weatherLocation, unitSystem)
         } else {
             ResultWrapper.Success(futureWeatherDao.getWeather())
         }
+    }
 
     private suspend fun fetchCurrentWeather(
         weatherLocation: WeatherLocation,
         unitSystem: UnitSystem
     ): ResultWrapper<CurrentWeatherEntry> =
-        weatherNetworkDataSource.fetchCurrentWeather(
+        weatherDataSource.fetchCurrentWeather(
             latitude = weatherLocation.latitude,
             longitude = weatherLocation.longitude,
             unitSystem = unitSystem.name
@@ -77,9 +74,11 @@ class WeatherRepositoryImpl(
             when (currentWeatherResult) {
                 is ResultWrapper.Loading -> ResultWrapper.Loading()
                 is ResultWrapper.Success -> {
-                    locationProvider.persistLocationForLastRequestCurrentWeather(weatherLocation)
-                    unitProvider.persistUnitSystemForLastRequestCurrentWeather(unitSystem)
-                    requestTimeProvider.persistTimeForLastRequestCurrentWeather(System.currentTimeMillis())
+                    with(lastWeatherRequestParams) {
+                        currentWeatherLocation = weatherLocation
+                        currentWeatherUnitSystem = unitSystem
+                        currentWeatherRequestTimeMillis = System.currentTimeMillis()
+                    }
                     val currentWeatherEntry = convertToCurrentWeatherEntry(currentWeatherResult.data)
                     persistFetchedCurrentWeather(currentWeatherEntry)
                     ResultWrapper.Success(currentWeatherEntry)
@@ -92,7 +91,7 @@ class WeatherRepositoryImpl(
         weatherLocation: WeatherLocation,
         unitSystem: UnitSystem
     ): ResultWrapper<List<FutureWeatherEntry>> =
-        weatherNetworkDataSource.fetchFutureWeather(
+        weatherDataSource.fetchFutureWeather(
             latitude = weatherLocation.latitude,
             longitude = weatherLocation.longitude,
             unitSystem = unitSystem.name
@@ -100,9 +99,11 @@ class WeatherRepositoryImpl(
             when (futureWeatherResult) {
                 is ResultWrapper.Loading -> ResultWrapper.Loading()
                 is ResultWrapper.Success -> {
-                    locationProvider.persistLocationForLastRequestFutureWeather(weatherLocation)
-                    unitProvider.persistUnitSystemForLastRequestFutureWeather(unitSystem)
-                    requestTimeProvider.persistTimeForLastRequestFutureWeather(System.currentTimeMillis())
+                    with(lastWeatherRequestParams) {
+                        futureWeatherLocation = weatherLocation
+                        futureWeatherUnitSystem = unitSystem
+                        futureWeatherRequestTimeMillis = System.currentTimeMillis()
+                    }
                     val futureWeatherList = convertToFutureWeatherList(futureWeatherResult.data)
                     persistFetchedFutureWeather(futureWeatherList)
                     ResultWrapper.Success(futureWeatherList)
@@ -111,11 +112,13 @@ class WeatherRepositoryImpl(
             }
         }
 
-    private suspend fun persistFetchedCurrentWeather(currentWeatherEntry: CurrentWeatherEntry) =
+    private suspend fun persistFetchedCurrentWeather(currentWeatherEntry: CurrentWeatherEntry) {
         currentWeatherDao.insertWeather(currentWeatherEntry)
+    }
 
-    private suspend fun persistFetchedFutureWeather(futureWeatherList: List<FutureWeatherEntry>) =
+    private suspend fun persistFetchedFutureWeather(futureWeatherList: List<FutureWeatherEntry>) {
         futureWeatherDao.insertWeather(futureWeatherList)
+    }
 
     private fun isFetchNewDataNeeded(
         currentLocation: WeatherLocation,
@@ -139,7 +142,7 @@ class WeatherRepositoryImpl(
             windSpeed = weatherResponse.current.windSpeed.toInt(),
             pressure = weatherResponse.current.pressure,
             humidity = weatherResponse.current.humidity,
-            uVIndex = weatherResponse.current.uvI.toInt(),
+            uvIndex = weatherResponse.current.uvI.toInt(),
             weatherDescription = weatherResponse.current.weather.first().description,
             weatherIconUrl = "https://openweathermap.org/img/wn/${weatherResponse.current.weather.first().icon}@2x.png"
         )
@@ -149,9 +152,7 @@ class WeatherRepositoryImpl(
         val futureWeatherList = mutableListOf<FutureWeatherEntry>()
 
         weatherResponse.daily.forEach {
-
             if (futureWeatherList.size == 7) return@forEach
-
             val futureWeatherEntry = FutureWeatherEntry(
                 dayOfWeekInt = convertToDayOfWeek(it.timestampSec),
                 timestampMillis = TimeUnit.SECONDS.toMillis(it.timestampSec),
@@ -170,7 +171,7 @@ class WeatherRepositoryImpl(
                     windSpeed = it.windSpeed.toInt(),
                     pressure = it.pressure,
                     humidity = it.humidity,
-                    uVIndex = it.uvI,
+                    uvIndex = it.uvI,
                     weatherDescription = it.weather.first().description,
                     weatherIconUrl = "https://openweathermap.org/img/wn/${it.weather.first().icon}@2x.png"
                 )
@@ -193,8 +194,8 @@ class WeatherRepositoryImpl(
         return calendar.get(Calendar.DAY_OF_WEEK)
     }
 
-    private companion object {
-        const val EXPIRE_TIME_MIN = 15
-        val compassDirections = arrayOf("N", "NE", "E", "SE", "S", "SW", "W", "NW")
+    companion object {
+        private const val EXPIRE_TIME_MIN = 15
+        private val compassDirections = arrayOf("N", "NE", "E", "SE", "S", "SW", "W", "NW")
     }
 }

@@ -5,14 +5,10 @@ import com.example.weather.data.WeatherLocation
 import kotlinx.coroutines.flow.Flow
 
 interface LocationProvider {
+    val isUseDeviceLocation: Boolean
     val useDeviceLocationFlow: Flow<Boolean>
     val locationFlow: Flow<ResultWrapper<WeatherLocation>>
-    fun isUsingDeviceLocation(): Boolean
-    fun updateUseDeviceLocationPreference(value: Boolean)
-    fun updateLocationPreference(location: WeatherLocation)
-    fun persistLocationForLastRequestCurrentWeather(location: WeatherLocation)
-    fun persistLocationForLastRequestFutureWeather(location: WeatherLocation)
-    fun getLocationForLastRequestCurrentWeather(): WeatherLocation?
-    fun getLocationForLastRequestFutureWeather(): WeatherLocation?
+    fun updateUseDeviceLocation(value: Boolean)
+    fun updateLocation(location: WeatherLocation)
     suspend fun requestLocationUpdate()
 }

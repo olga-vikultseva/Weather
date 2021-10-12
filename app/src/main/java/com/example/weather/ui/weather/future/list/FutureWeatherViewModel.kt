@@ -126,7 +126,7 @@ class FutureWeatherViewModel @Inject constructor(
         futureWeatherInteractor.close()
     }
 
-    private companion object {
-        val daysOfWeek = arrayOf(1, 2, 3, 4, 5, 6, 7)
+    companion object {
+        private val daysOfWeek = arrayOf(1, 2, 3, 4, 5, 6, 7)
     }
 }

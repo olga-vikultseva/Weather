@@ -3,11 +3,22 @@ package com.example.weather.di
 import android.content.Context
 import com.example.weather.R
 import com.example.weather.data.ErrorType
+import com.example.weather.data.datasources.CityDataSource
+import com.example.weather.data.datasources.CityDataSourceImpl
+import com.example.weather.data.datasources.WeatherDataSource
+import com.example.weather.data.datasources.WeatherDataSourceImpl
 import com.example.weather.data.db.CurrentWeatherDao
 import com.example.weather.data.db.FutureWeatherDao
 import com.example.weather.data.db.WeatherDatabase
-import com.example.weather.data.network.*
-import com.example.weather.data.providers.*
+import com.example.weather.data.network.ConnectivityInterceptor
+import com.example.weather.data.network.ConnectivityInterceptorImpl
+import com.example.weather.data.network.GeocodingApiService
+import com.example.weather.data.network.WeatherApiService
+import com.example.weather.data.providers.LocationProvider
+import com.example.weather.data.providers.LocationProviderImpl
+import com.example.weather.data.providers.UnitSystemProvider
+import com.example.weather.data.providers.UnitSystemProviderImpl
+import com.example.weather.data.repositories.LastWeatherRequestParamsProvider
 import com.example.weather.data.repositories.WeatherRepository
 import com.example.weather.data.repositories.WeatherRepositoryImpl
 import com.example.weather.internal.ErrorFormatter
@@ -49,8 +60,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideWeatherNetworkDataSource(weatherApiService: WeatherApiService): WeatherNetworkDataSource =
-        WeatherNetworkDataSourceImpl(weatherApiService)
+    fun provideWeatherDataSource(weatherApiService: WeatherApiService): WeatherDataSource =
+        WeatherDataSourceImpl(weatherApiService)
 
     @Provides
     @Singleton
@@ -59,47 +70,44 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideCityNetworkDataSource(geocodingApiService: GeocodingApiService): CityNetworkDataSource =
-        CityNetworkDataSourceImpl(geocodingApiService)
+    fun provideCityDataSource(geocodingApiService: GeocodingApiService): CityDataSource =
+        CityDataSourceImpl(geocodingApiService)
 
     @Provides
     @Singleton
     fun provideWeatherRepository(
         currentWeatherDao: CurrentWeatherDao,
         futureWeatherDao: FutureWeatherDao,
-        weatherNetworkDataSource: WeatherNetworkDataSource,
-        locationProvider: LocationProvider,
-        unitProvider: UnitProvider,
-        requestTimeProvider: RequestTimeProvider
+        weatherDataSource: WeatherDataSource,
+        lastWeatherRequestParamsProvider: LastWeatherRequestParamsProvider
     ): WeatherRepository = WeatherRepositoryImpl(
         currentWeatherDao,
         futureWeatherDao,
-        weatherNetworkDataSource,
-        locationProvider,
-        unitProvider,
-        requestTimeProvider
+        weatherDataSource,
+        lastWeatherRequestParamsProvider
     )
+
+    @Provides
+    @Singleton
+    fun provideUnitSystemProvider(@ApplicationContext context: Context): UnitSystemProvider =
+        UnitSystemProviderImpl(context)
 
     @Provides
     @Singleton
     fun provideLocationProvider(
         @ApplicationContext context: Context,
-        cityNetworkDataSource: CityNetworkDataSource
+        cityDataSource: CityDataSource
     ): LocationProvider = LocationProviderImpl(
         context,
-        cityNetworkDataSource,
+        cityDataSource,
         LocationServices.getFusedLocationProviderClient(context)
     )
 
     @Provides
     @Singleton
-    fun provideRequestTimeProvider(@ApplicationContext context: Context): RequestTimeProvider =
-        RequestTimeProviderImpl(context)
-
-    @Provides
-    @Singleton
-    fun provideUnitProvider(@ApplicationContext context: Context): UnitProvider =
-        UnitProviderImpl(context)
+    fun provideLastWeatherRequestParamsProvider(
+        @ApplicationContext context: Context
+    ): LastWeatherRequestParamsProvider = LastWeatherRequestParamsProvider(context)
 
     @Provides
     @Singleton
@@ -129,19 +137,19 @@ object AppModule {
     @Singleton
     fun provideMetricFormatter(
         @ApplicationContext context: Context,
-        unitProvider: UnitProvider
+        unitSystemProvider: UnitSystemProvider
     ): MetricFormatter = object : MetricFormatter {
 
         override fun getFormattedTemperature(temperature: Int): String {
-            val tempPlaceholder =
-                if (unitProvider.isMetricUnit) R.string.temp_placeholder_metric else R.string.temp_placeholder_imperial
-            return context.getString(tempPlaceholder, temperature)
+            val placeholder =
+                if (unitSystemProvider.isMetricUnitSystem) R.string.temp_placeholder_metric else R.string.temp_placeholder_imperial
+            return context.getString(placeholder, temperature)
         }
 
         override fun getFormattedWindSpeed(windSpeed: Int): String {
-            val windSpeedPlaceholder =
-                if (unitProvider.isMetricUnit) R.string.wind_speed_placeholder_metric else R.string.wind_speed_placeholder_imperial
-            return context.getString(windSpeedPlaceholder, windSpeed)
+            val placeholder =
+                if (unitSystemProvider.isMetricUnitSystem) R.string.wind_speed_placeholder_metric else R.string.wind_speed_placeholder_imperial
+            return context.getString(placeholder, windSpeed)
         }
     }
 
